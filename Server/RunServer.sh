@@ -1,7 +1,7 @@
 #!/bin/sh
 
 ## Make file
-gcc -o server server.cpp
+g++ server.cpp -o server
 
 ## Run files
 ./server -p 10001 -d ./emailFolder
