@@ -18,6 +18,8 @@
 
 using namespace std;
 
+int checklength (string field, int field_length);
+
 int main(int argc, char* argv[]){
     
     //1 - INITIALIZATION
@@ -91,38 +93,34 @@ int main(int argc, char* argv[]){
             emailStart:
             printf ("Please enter the command: ");
             getline (cin, command);
+            //SEND
             if (command == "SEND"){
                 string sender, receiver, subject, body;
+                //Sender
                 getline(cin, sender);
-                if (sender.length() > 8){
-                    cout << "Username length is max. 8 characters. Start over.\n" << endl;
-                    goto emailStart;
-                }
+                checklength(sender, 8);
+                //Receiver
                 getline(cin, receiver);
-                if (receiver.length() > 8){
-                    cout << "Username length is max. 8 characters. Start over.\n" << endl;
-                    goto emailStart;
-                }
+                checklength(receiver, 8);
+                //Subject
                 getline(cin, subject);
-                if (subject.length() > 80){
-                    cout << "Subject length is max. 80 characters. Start over.\n" << endl;
-                    goto emailStart;
-                }
+                checklength(subject, 80);
+                //Body
                 string bodyline;
                 while (bodyline != "."){
                     getline(cin, bodyline);
                     body = body + '\n' + bodyline;    
                 }
-                message = command + '\n' + sender + '\n' + receiver + '\n' + subject + '\n' + body + '\n'; //Append parts
+                message = command + '\n' + sender + '\n' + receiver + '\n' + subject + '\n' + body + '\n';
+            //READ / LIST / DEL Commands
             } else if (command == "READ" || command == "LIST" || command == "DEL") {
+                //Username
                 string username;
                 getline(cin, username);
-                if (username.length() > 8){
-                    cout << "Username length is max. 8 characters. Start over.\n" << endl;
-                    goto emailStart;
-                }
+                checklength(username, 8);
                 message = command + '\n' + username + '\n';
-                if (command == "DEL"){
+                //Message number
+                if (command == "DEL" || command == "READ"){
                     string msgnumber;
                     getline(cin, msgnumber);
                     message = message + msgnumber + '\n';
@@ -132,12 +130,30 @@ int main(int argc, char* argv[]){
             }
             //Message is sent
             char* msgsocket = &(message[0]); //Convert to C for using socket
-
             send(create_socket, msgsocket, strlen(msgsocket), 0); //Send through
+
+            //Reply
+            size = recv (create_socket, buffer, BUF-1, 0);
+            if( size > 0){
+                buffer[size] = '\0';
+                printf ("%s", buffer);
+            } else {
+                perror("Error receiving the reply");
+                return 1;
+            }
         }
         while (command != "QUIT");
     
     //4 - CLOSE CONNECTION
     close (create_socket);
+    return 0;
+}
+
+
+int checklength (string field, int field_length){
+    if (field.length() > field_length){
+        cout << "Username length is max. " << field_length << " characters. Start over.\n" << endl;
+        return 1;
+    }
     return 0;
 }
