@@ -6,6 +6,11 @@
 #include <sstream>
 #include <vector>
 
+void defaultMethod(std::vector<std::string> messageParsed)
+{
+    std::cout << "METHOD: " << messageParsed[0] << std::endl;
+}
+
 void mailHandler(char *input)
 {
     // printf("MMessage received: %s", input);
@@ -17,16 +22,22 @@ void mailHandler(char *input)
     {
         messageParsed.push_back(parsed);
     }
-    std::cout << "METHOD: " << messageParsed[0] << std::endl;
+
     // TODO: ROUTING HERE
-    //     switch(messageParsed[0]) {
-    //   case '':
-    //     // code block
-    //     break;
-    //   case y:
-    //     // code block
-    //     break;
-    //   default:
-    //     // code block
-}
+    if (messageParsed[0] == "SEND")
+    {
+        defaultMethod(messageParsed);
+    }
+    else if (messageParsed[0] == "LIST")
+    {
+        defaultMethod(messageParsed);
+    }
+    else if (messageParsed[0] == "READ")
+    {
+        defaultMethod(messageParsed);
+    }
+    else if (messageParsed[0] == "DEL")
+    {
+        defaultMethod(messageParsed);
+    }
 }
