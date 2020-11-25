@@ -16,6 +16,14 @@
 #include <errno.h>
 #include <iostream>
 
+std::string getInput(std::string output)
+{
+    printf("%s", output.c_str());
+    std::string input;
+    std::getline(std::cin, input);
+    return input;
+}
+
 int main(int argc, char *argv[])
 {
 
@@ -93,14 +101,55 @@ int main(int argc, char *argv[])
     //Send message
     do
     {
-        printf("Send message: ");
-        std::string message = "SEND\nif19b111\nif19b103\nTESTING\n";
-        std::string input;
-        std::getline(std::cin, input);
-        message.append(input);
-        message.append(".\n");
+        std::string message;
+        std::string method = getInput("METHOD: ");
+        message.append(method);
+        message.append("\n");
+        message.append(getInput("USERNAME: "));
+        message.append("\n");
+        if (method.compare("SEND") == 0)
+        {
+            message.append(getInput("Receiver: "));
+            message.append("\n");
+            message.append(getInput("Subject: "));
+            message.append("\n");
+            message.append(getInput("Message: "));
+            message.append("\n");
+        }
+        else if (method.compare("READ") == 0)
+        {
+            message.append(getInput("Message Number: "));
+            message.append("\n");
+        }
+        else if (method.compare("DEL") == 0)
+        {
+            message.append(getInput("Message Number: "));
+            message.append("\n");
+        }
+        else if (method.compare("LIST") == 1 || method.compare("QUIT") == 1)
+        {
+        }
+        else
+        {
+            printf("\033[0;31mINVALID METHOD\033[0m\n");
+            continue;
+        }
+        message.append("\n");
         strcpy(buffer, message.c_str());
         send(create_socket, buffer, strlen(buffer), 0);
+        size = recv(create_socket, buffer, BUF - 1, 0);
+        if (size > 0)
+        {
+            buffer[size] = '\0';
+            printf("\033[0;32m%s\033[0m\n", buffer);
+        }
+        else if (size == 0)
+        {
+            printf("Server said Bye Bye.");
+            fflush(stdout);
+            close(create_socket);
+            exit(0);
+        }
     } while (strcmp(buffer, "quit\n") != 0);
     close(create_socket);
 

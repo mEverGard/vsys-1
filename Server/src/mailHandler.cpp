@@ -5,15 +5,21 @@
 #include <string>
 #include <sstream>
 #include <vector>
+#include "statusCodes.cpp"
 
 void defaultMethod(std::vector<std::string> messageParsed)
 {
     std::cout << "METHOD: " << messageParsed[0] << std::endl;
 }
 
-void mailHandler(char *input)
+void returnMessage(int socket, const char *message)
 {
-    // printf("MMessage received: %s", input);
+    send(socket, message, strlen(message), 0);
+}
+
+void mailHandler(char *input, int clientSocket)
+{
+    printf("MMessage received: %s", input);
     std::vector<std::string> messageParsed;
     std::string parsed;
     std::string temp(input);
@@ -40,4 +46,5 @@ void mailHandler(char *input)
     {
         defaultMethod(messageParsed);
     }
+    returnMessage(clientSocket, status_code[0]);
 }

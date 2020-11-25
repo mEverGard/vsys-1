@@ -103,7 +103,7 @@ int main(int argc, char *argv[])
             if (size > 0)
             {
                 buffer[size] = '\0';
-                mailHandler(buffer);
+                mailHandler(buffer, newSocket);
             }
             else if (size == 0)
             {
