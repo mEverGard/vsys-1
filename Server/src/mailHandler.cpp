@@ -19,4 +19,14 @@ void mailHandler(char *input)
     }
     std::cout << "METHOD: " << messageParsed[0] << std::endl;
     // TODO: ROUTING HERE
+    //     switch(messageParsed[0]) {
+    //   case '':
+    //     // code block
+    //     break;
+    //   case y:
+    //     // code block
+    //     break;
+    //   default:
+    //     // code block
+}
 }
