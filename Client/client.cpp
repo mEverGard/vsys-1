@@ -126,14 +126,12 @@ int main(int argc, char *argv[])
             message.append(getInput("Message Number: "));
             message.append("\n");
         }
-        else if (method.compare("LIST") == 1 || method.compare("QUIT") == 1)
-        {
-        }
-        else
+        else if (method.compare("LIST") == 1 && method.compare("QUIT") == 1)
         {
             printf("\033[0;31mINVALID METHOD\033[0m\n");
             continue;
         }
+
         message.append("\n");
         strcpy(buffer, message.c_str());
         send(create_socket, buffer, strlen(buffer), 0);
