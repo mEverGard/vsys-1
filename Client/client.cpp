@@ -21,7 +21,7 @@ std::string getInput(std::string output)
     printf("%s", output.c_str());
     std::string input;
     std::getline(std::cin, input);
-    return input;
+    return input + "\n";
 }
 
 int main(int argc, char *argv[])
@@ -104,35 +104,28 @@ int main(int argc, char *argv[])
         std::string message;
         std::string method = getInput("METHOD: ");
         message.append(method);
-        message.append("\n");
         message.append(getInput("USERNAME: "));
-        message.append("\n");
-        if (method.compare("SEND") == 0)
+
+        if (method.compare("SEND\n") == 0)
         {
             message.append(getInput("Receiver: "));
-            message.append("\n");
             message.append(getInput("Subject: "));
-            message.append("\n");
             message.append(getInput("Message: "));
-            message.append("\n");
         }
-        else if (method.compare("READ") == 0)
+        else if (method.compare("READ\n") == 0)
         {
             message.append(getInput("Message Number: "));
-            message.append("\n");
         }
-        else if (method.compare("DEL") == 0)
+        else if (method.compare("DEL\n") == 0)
         {
             message.append(getInput("Message Number: "));
-            message.append("\n");
         }
-        else if (method.compare("LIST") == 1 && method.compare("QUIT") == 1)
+        else if (method.compare("LIST\n") == 1 && method.compare("QUIT\n") == 1)
         {
             printf("\033[0;31mINVALID METHOD\033[0m\n");
             continue;
         }
 
-        message.append("\n");
         strcpy(buffer, message.c_str());
         send(create_socket, buffer, strlen(buffer), 0);
         size = recv(create_socket, buffer, BUF - 1, 0);
