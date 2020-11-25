@@ -14,9 +14,9 @@ void mailHandler(char *input)
     std::string temp(input);
     std::stringstream strm(temp);
     std::getline(strm, parsed);
-    // while (std::getline(strm, parsed))
-    // {
-    //     messageParsed.push_back(parsed);
-    // }
-    std::cout << parsed << std::endl;
+    while (std::getline(strm, parsed))
+    {
+        messageParsed.push_back(parsed);
+    }
+    // std::cout << parsed << std::endl;
 }

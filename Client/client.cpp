@@ -96,7 +96,7 @@ int main(int argc, char *argv[])
         printf("Send message: ");
         std::string message = "SEND\nif19b111\nif19b103\nTESTING\n";
         std::string input;
-        std::cin >> input;
+        std::getline(std::cin, input);
         message.append(input);
         message.append(".\n");
         strcpy(buffer, message.c_str());
