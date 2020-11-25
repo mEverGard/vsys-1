@@ -97,22 +97,26 @@ int main(int argc, char *argv[])
             strcpy(buffer, "Welcome to myserver, Please enter your command:\n");
             send(newSocket, buffer, strlen(buffer), 0);
         }
-        size = recv(newSocket, buffer, BUF - 1, 0);
-        if (size > 0)
+        do
         {
-            buffer[size] = '\0';
-            mailHandler(buffer);
-        }
-        else if (size == 0)
-        {
-            printf("Client closed remote socket\n");
-            break;
-        }
-        else
-        {
-            perror("recv error");
-            return 1;
-        }
+            size = recv(newSocket, buffer, BUF - 1, 0);
+            if (size > 0)
+            {
+                buffer[size] = '\0';
+                mailHandler(buffer);
+            }
+            else if (size == 0)
+            {
+                printf("Client closed remote socket\n");
+                break;
+            }
+            else
+            {
+                perror("recv error");
+                return 1;
+            }
+
+        } while (strncmp(buffer, "quit", 4) != 0);
         close(newSocket);
     }
 
