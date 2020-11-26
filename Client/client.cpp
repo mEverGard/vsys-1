@@ -16,12 +16,22 @@
 #include <errno.h>
 #include <iostream>
 
-std::string getInput(std::string output)
+std::string getInput(std::string output, bool isMessage = false)
 {
     printf("%s", output.c_str());
     std::string input;
-    std::getline(std::cin, input);
-    return input + "\n";
+    if (!isMessage)
+    {
+        std::getline(std::cin, input);
+        return input + "\n";
+    }
+    std::string bodyline;
+    while (bodyline != ".")
+    {
+        std::getline(std::cin, bodyline);
+        input += bodyline + '\n';
+    }
+    return input;
 }
 
 int main(int argc, char *argv[])
@@ -110,13 +120,9 @@ int main(int argc, char *argv[])
         {
             message.append(getInput("Receiver: "));
             message.append(getInput("Subject: "));
-            message.append(getInput("Message: "));
+            message.append(getInput("Message: ", true));
         }
-        else if (method.compare("READ\n") == 0)
-        {
-            message.append(getInput("Message Number: "));
-        }
-        else if (method.compare("DEL\n") == 0)
+        else if (method.compare("READ\n") == 0 || method.compare("DEL\n") == 0)
         {
             message.append(getInput("Message Number: "));
         }
