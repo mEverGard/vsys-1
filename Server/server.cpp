@@ -15,6 +15,7 @@
 #include <netinet/in.h>
 #include <arpa/inet.h>
 #include <errno.h>
+#include <sys/stat.h>
 #include "src/mailHandler.cpp"
 
 int main(int argc, char *argv[])
@@ -60,10 +61,14 @@ int main(int argc, char *argv[])
     //Checks if directory exist
     if (opendir(directory) == NULL)
     {
-        perror("Failed to open directory. Start again\n.");
-        return 1;
+        // read/write/search permissions for owner and group, and with read/search permissions for others
+        if (mkdir(directory, S_IRWXU | S_IRWXG | S_IROTH | S_IXOTH) != 0)
+        {
+            perror("Failed to open/create directory.\n.");
+            return 1;
+        }
+        printf("Directory not found => created\n");
     }
-
     //2 - SOCKETING
 
     //create socket
@@ -103,7 +108,7 @@ int main(int argc, char *argv[])
             if (size > 0)
             {
                 buffer[size] = '\0';
-                mailHandler(buffer, newSocket);
+                mailHandler(buffer, newSocket, directory);
             }
             else if (size == 0)
             {
