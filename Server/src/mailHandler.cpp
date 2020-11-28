@@ -13,7 +13,7 @@
 #include <string.h>
 #include <sys/stat.h>
 #include <filesystem>
-
+#include <algorithm>
 void defaultMethod(std::vector<std::string> messageParsed)
 {
     std::cout << "METHOD: " << messageParsed[0] << std::endl;
@@ -61,7 +61,7 @@ const char *sendHandler(std::vector<std::string> message, char *dir)
     }
     DIR *dp;
     int i = getCount(path);
-    std::string filePath = path + "/" + std::to_string(i) + "_" + message[3];
+    std::string filePath = path + "/" + message[3] + ":-:" + std::to_string(i);
     std::ofstream MailFile(filePath);
     MailFile << "SENDER: " << message[1] << std::endl;
     MailFile << "SUBJECT: " << message[3] << std::endl;
@@ -70,15 +70,44 @@ const char *sendHandler(std::vector<std::string> message, char *dir)
     return status_code[0];
 }
 
-void listHandler(std::vector<std::string> message, char *dir)
+std::string cReplace(std::string str)
+{
+    size_t i = str.find(":=:", 0);
+    while (i != std::string::npos)
+    {
+        str.replace(i, 3, " ");
+        i = str.find(":=:", i);
+    }
+    return str;
+}
+
+const char *listHandler(std::vector<std::string> message, char *dir)
 
 {
-    DIR *dp = opendir("./");
-
+    std::string path = dir;
+    path += '/' + message[2];
+    DIR *dp = opendir(path.c_str());
+    std::string out = "";
+    struct dirent *ent;
+    std::string count = "";
     if (dp != NULL)
     {
-        return;
+        while ((ent = readdir(dp)) != NULL)
+        {
+            std::string temp = ent->d_name;
+            if (temp != "count")
+            {
+                out += temp + '\n';
+            }
+            else
+            {
+                count += "Count: " + temp + '\n';
+            }
+        }
+        closedir(dp);
     }
+    out.insert(0, count);
+    return cReplace(out).c_str();
 }
 
 void mailHandler(char *input, int clientSocket, char *directory)
@@ -101,7 +130,7 @@ void mailHandler(char *input, int clientSocket, char *directory)
     }
     else if (messageParsed[0] == "LIST")
     {
-        defaultMethod(messageParsed);
+        returnMessage(clientSocket, listHandler(messageParsed, directory));
     }
     else if (messageParsed[0] == "READ")
     {
