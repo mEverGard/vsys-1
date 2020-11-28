@@ -9,6 +9,11 @@
 #include <dirent.h>
 #include <errno.h>
 #include <fstream>
+#include <sys/socket.h>
+#include <string.h>
+#include <sys/stat.h>
+#include <filesystem>
+
 void defaultMethod(std::vector<std::string> messageParsed)
 {
     std::cout << "METHOD: " << messageParsed[0] << std::endl;
@@ -20,7 +25,26 @@ void returnMessage(int socket, const char *message)
     send(socket, message, strlen(message), 0);
 }
 
-void sendHandler(std::vector<std::string> message, char *dir)
+int getCount(std::string path)
+{
+    int i = 1;
+    std::string temp;
+    std::ifstream outfile(path + "/count");
+    if (outfile.is_open())
+    {
+        getline(outfile, temp);
+        i = std::stoi(temp) + 1;
+        outfile.close();
+    }
+    std::ofstream infile(path + "/count");
+    if (infile.is_open())
+    {
+        infile << i << "\n";
+    }
+    return i;
+}
+
+const char *sendHandler(std::vector<std::string> message, char *dir)
 {
     // METHOD USERNAME RECEIVER SUBJECT MESSAGE
     std::string path = dir;
@@ -32,27 +56,29 @@ void sendHandler(std::vector<std::string> message, char *dir)
         if (mkdir(path.c_str(), S_IRWXU | S_IRWXG | S_IROTH | S_IXOTH) != 0)
         {
             perror("Failed to open/create user directory.\n.");
-            return;
+            return status_code[2];
         }
     }
     DIR *dp;
-    int i = 0;
-    dp = opendir("./");
-
-    if (dp != NULL)
-    {
-        while (readdir(dp))
-            i++;
-
-        (void)closedir(dp);
-    }
-    std::string filePath = path + "/" + std::to_string(i);
+    int i = getCount(path);
+    std::string filePath = path + "/" + std::to_string(i) + "_" + message[3];
     std::ofstream MailFile(filePath);
     MailFile << "SENDER: " << message[1] << std::endl;
     MailFile << "SUBJECT: " << message[3] << std::endl;
     MailFile << "CONTENT: " << message[4] << std::endl;
     MailFile.close();
-    return;
+    return status_code[0];
+}
+
+void listHandler(std::vector<std::string> message, char *dir)
+
+{
+    DIR *dp = opendir("./");
+
+    if (dp != NULL)
+    {
+        return;
+    }
 }
 
 void mailHandler(char *input, int clientSocket, char *directory)
@@ -71,7 +97,7 @@ void mailHandler(char *input, int clientSocket, char *directory)
     // TODO: ROUTING HERE
     if (messageParsed[0] == "SEND")
     {
-        sendHandler(messageParsed, directory);
+        returnMessage(clientSocket, sendHandler(messageParsed, directory));
     }
     else if (messageParsed[0] == "LIST")
     {
@@ -85,5 +111,8 @@ void mailHandler(char *input, int clientSocket, char *directory)
     {
         defaultMethod(messageParsed);
     }
-    returnMessage(clientSocket, status_code[0]);
+    else
+    {
+        returnMessage(clientSocket, status_code[2]);
+    }
 }
