@@ -61,7 +61,7 @@ const char *sendHandler(std::vector<std::string> message, char *dir)
     }
     DIR *dp;
     int i = getCount(path);
-    std::string filePath = path + "/" + message[3] + ":-:" + std::to_string(i);
+    std::string filePath = path + "/" + message[3] + "_" + std::to_string(i) + ".txt";
     std::ofstream MailFile(filePath);
     MailFile << "SENDER: " << message[1] << std::endl;
     MailFile << "SUBJECT: " << message[3] << std::endl;
@@ -72,11 +72,12 @@ const char *sendHandler(std::vector<std::string> message, char *dir)
 
 std::string cReplace(std::string str)
 {
-    size_t i = str.find(":=:", 0);
+    // redo replace so it only changes the last one (or call the function directly)
+    size_t i = str.find("_", 0);
     while (i != std::string::npos)
     {
         str.replace(i, 3, " ");
-        i = str.find(":=:", i);
+        i = str.find("_", i);
     }
     return str;
 }
@@ -94,7 +95,10 @@ const char *listHandler(std::vector<std::string> message, char *dir)
     {
         while ((ent = readdir(dp)) != NULL)
         {
+            std::cout << "here: " << std::endl;
+            std::cout << ent->d_name << std::endl;
             std::string temp = ent->d_name;
+            std::cout << "closed: " << std::endl;
             if (temp != "count")
             {
                 out += temp + '\n';
@@ -112,7 +116,7 @@ const char *listHandler(std::vector<std::string> message, char *dir)
 
 void mailHandler(char *input, int clientSocket, char *directory)
 {
-    printf("Message received: %s", input);
+    // printf("Message received: %s", input);
 
     std::vector<std::string> messageParsed;
     std::string parsed;
