@@ -19,10 +19,11 @@ void defaultMethod(std::vector<std::string> messageParsed)
     std::cout << "METHOD: " << messageParsed[0] << std::endl;
 }
 
-void returnMessage(int socket, const char *message)
+void returnMessage(int socket, char *message)
 {
-
+    std::cout << message << std::endl;
     send(socket, message, strlen(message), 0);
+    std::cout << "test2" << std::endl;
 }
 
 int getCount(std::string path)
@@ -44,7 +45,7 @@ int getCount(std::string path)
     return i;
 }
 
-const char *sendHandler(std::vector<std::string> message, char *dir)
+char *sendHandler(std::vector<std::string> message, char *dir)
 {
     // METHOD USERNAME RECEIVER SUBJECT MESSAGE
     std::string path = dir;
@@ -70,48 +71,39 @@ const char *sendHandler(std::vector<std::string> message, char *dir)
     return status_code[0];
 }
 
-std::string cReplace(std::string str)
-{
-    // redo replace so it only changes the last one (or call the function directly)
-    size_t i = str.find("_", 0);
-    while (i != std::string::npos)
-    {
-        str.replace(i, 3, " ");
-        i = str.find("_", i);
-    }
-    return str;
-}
-
-const char *listHandler(std::vector<std::string> message, char *dir)
-
+void listHandler(std::vector<std::string> message, char *dir, int soc)
 {
     std::string path = dir;
-    path += '/' + message[2];
-    DIR *dp = opendir(path.c_str());
+    path += '/' + message[1];
+    DIR *dp;
     std::string out = "";
-    struct dirent *ent;
+
     std::string count = "";
-    if (dp != NULL)
+    if (dp = opendir(path.c_str()))
     {
+        struct dirent *ent;
+        std::ifstream is_counter;
+
+        is_counter.open(path + "/count");
+        is_counter >> count;
+        is_counter.close();
+        count += '\n';
         while ((ent = readdir(dp)) != NULL)
         {
-            std::cout << "here: " << std::endl;
-            std::cout << ent->d_name << std::endl;
             std::string temp = ent->d_name;
-            std::cout << "closed: " << std::endl;
-            if (temp != "count")
+            if (temp != "count" && temp.size() > 3)
             {
                 out += temp + '\n';
-            }
-            else
-            {
-                count += "Count: " + temp + '\n';
             }
         }
         closedir(dp);
     }
+    else
+    {
+        out = "0";
+    }
     out.insert(0, count);
-    return cReplace(out).c_str();
+    returnMessage(soc, (char *)out.c_str());
 }
 
 void mailHandler(char *input, int clientSocket, char *directory)
@@ -134,7 +126,7 @@ void mailHandler(char *input, int clientSocket, char *directory)
     }
     else if (messageParsed[0] == "LIST")
     {
-        returnMessage(clientSocket, listHandler(messageParsed, directory));
+        listHandler(messageParsed, directory, clientSocket);
     }
     else if (messageParsed[0] == "READ")
     {
