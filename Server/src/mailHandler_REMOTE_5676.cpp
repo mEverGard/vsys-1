@@ -13,25 +13,14 @@
 #include <string.h>
 #include <sys/stat.h>
 #include <filesystem>
-<<<<<<< HEAD
-=======
 #include <algorithm>
 #include <cstdio>
->>>>>>> ec6f38af7bbbfb294cb6ed25bddd8fa5073bc915
 
 void defaultMethod(std::vector<std::string> messageParsed)
 {
     std::cout << "METHOD: " << messageParsed[0] << std::endl;
 }
 
-<<<<<<< HEAD
-void returnMessage(int socket, const char *message)
-{
-
-    send(socket, message, strlen(message), 0);
-}
-
-=======
 void returnMessage(int socket, char *message)
 {
     send(socket, message, strlen(message), 0);
@@ -46,7 +35,6 @@ int checkName (std::string fileName, std::string msgnumber){
     return 1;
 }
 
->>>>>>> ec6f38af7bbbfb294cb6ed25bddd8fa5073bc915
 int getCount(std::string path)
 {
     int i = 1;
@@ -66,11 +54,7 @@ int getCount(std::string path)
     return i;
 }
 
-<<<<<<< HEAD
-const char *sendHandler(std::vector<std::string> message, char *dir)
-=======
 char *sendHandler(std::vector<std::string> message, char *dir)
->>>>>>> ec6f38af7bbbfb294cb6ed25bddd8fa5073bc915
 {
     // METHOD USERNAME RECEIVER SUBJECT MESSAGE
     std::string path = dir;
@@ -87,13 +71,6 @@ char *sendHandler(std::vector<std::string> message, char *dir)
     }
     DIR *dp;
     int i = getCount(path);
-<<<<<<< HEAD
-    std::string filePath = path + "/" + std::to_string(i) + "_" + message[3];
-    std::ofstream MailFile(filePath);
-    MailFile << "SENDER: " << message[1] << std::endl;
-    MailFile << "SUBJECT: " << message[3] << std::endl;
-    MailFile << "CONTENT: " << message[4] << std::endl;
-=======
     std::string filePath = path + "/" + message[3] + "_" + std::to_string(i) + ".txt";
     std::ofstream MailFile(filePath);
     MailFile << "SENDER: " << message[1] << std::endl;
@@ -104,22 +81,10 @@ char *sendHandler(std::vector<std::string> message, char *dir)
         MailFile << message[n] << std::endl;
         n++;
     }
->>>>>>> ec6f38af7bbbfb294cb6ed25bddd8fa5073bc915
     MailFile.close();
     return status_code[0];
 }
 
-<<<<<<< HEAD
-void listHandler(std::vector<std::string> message, char *dir)
-
-{
-    DIR *dp = opendir("./");
-
-    if (dp != NULL)
-    {
-        return;
-    }
-=======
 void readHandler (std::vector<std::string> message, char *dir, int soc){
     //Identify file
     std::string path = dir;
@@ -211,16 +176,11 @@ void deleteHandler(std::vector<std::string> message, char *dir, int soc){
         closedir(dp);
     }
     returnMessage(soc, (char *)out.c_str());
->>>>>>> ec6f38af7bbbfb294cb6ed25bddd8fa5073bc915
 }
 
 void mailHandler(char *input, int clientSocket, char *directory)
 {
-<<<<<<< HEAD
-    printf("Message received: %s", input);
-=======
     // printf("Message received: %s", input);
->>>>>>> ec6f38af7bbbfb294cb6ed25bddd8fa5073bc915
 
     std::vector<std::string> messageParsed;
     std::string parsed;
@@ -238,17 +198,6 @@ void mailHandler(char *input, int clientSocket, char *directory)
     }
     else if (messageParsed[0] == "LIST")
     {
-<<<<<<< HEAD
-        defaultMethod(messageParsed);
-    }
-    else if (messageParsed[0] == "READ")
-    {
-        defaultMethod(messageParsed);
-    }
-    else if (messageParsed[0] == "DEL")
-    {
-        defaultMethod(messageParsed);
-=======
         listHandler(messageParsed, directory, clientSocket);
     }
     else if (messageParsed[0] == "READ")
@@ -258,14 +207,10 @@ void mailHandler(char *input, int clientSocket, char *directory)
     else if (messageParsed[0] == "DEL")
     {
         deleteHandler(messageParsed, directory, clientSocket);
->>>>>>> ec6f38af7bbbfb294cb6ed25bddd8fa5073bc915
     }
     else
     {
         returnMessage(clientSocket, status_code[2]);
     }
 }
-<<<<<<< HEAD
-=======
 
->>>>>>> ec6f38af7bbbfb294cb6ed25bddd8fa5073bc915

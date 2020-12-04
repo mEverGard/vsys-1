@@ -1,0 +1,6 @@
+SENDER: test
+SUBJECT: another message
+CONTENT: Hi there
+I have also multiple lines
+capisci?
+.
