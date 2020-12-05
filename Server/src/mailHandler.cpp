@@ -70,7 +70,6 @@ void sendHandler(std::vector<std::string> message, char *dir, int soc)
             returnMessage(soc, (status_code[1]));
         }
     }
-    DIR *dp;
     int i = getCount(path);
     std::string filePath = path + "/" + std::to_string(i) + "_" +   message[3] + ".txt";
     std::ofstream MailFile(filePath);
@@ -92,7 +91,7 @@ void readHandler (std::vector<std::string> message, char *dir, int soc){
     path += '/' + message[1];
     DIR *dp;
     std::string out = "";
-    if (dp = opendir(path.c_str())){
+    if ((dp = opendir(path.c_str()))){
         struct dirent *ent;
         //get subjects
         while ((ent = readdir(dp)) != NULL) {
@@ -126,7 +125,7 @@ void listHandler(std::vector<std::string> message, char *dir, int soc) {
     DIR *dp;
     std::string out = "";
 
-    if (dp = opendir(path.c_str()))
+    if ((dp = opendir(path.c_str())))
     {
         struct dirent *ent;
 
@@ -157,7 +156,7 @@ void deleteHandler(std::vector<std::string> message, char *dir, int soc){
     path += '/' + message[1];
     DIR *dp;
     std::string out = status_code[1];
-    if (dp = opendir(path.c_str())){
+    if ((dp = opendir(path.c_str()))){
         struct dirent *ent;
         while ((ent = readdir(dp)) != NULL) {
             if (checkName (ent->d_name, message[2].c_str()) == 0) { //if it is the right file, go in

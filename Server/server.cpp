@@ -17,6 +17,7 @@
 #include <errno.h>
 #include <sys/stat.h>
 #include "src/mailHandler.cpp"
+#include "src/myldap.cpp"
 
 int main(int argc, char *argv[])
 {
@@ -91,6 +92,7 @@ int main(int argc, char *argv[])
     //3 - SERVER WORKING
     addrlen = sizeof(struct sockaddr_in);
     int size;
+    int loggedIn = 0;
 
     while (1)
     {
@@ -99,24 +101,24 @@ int main(int argc, char *argv[])
         if (newSocket > 0)
         {
             printf("Client connected from %s:%d...\n", inet_ntoa(cliaddress.sin_addr), ntohs(cliaddress.sin_port));
-            strcpy(buffer, "Welcome to myserver, Please enter your command:\n");
+            strcpy(buffer, "Welcome to myserver, Please enter your login data.\n");
             send(newSocket, buffer, strlen(buffer), 0);
         }
         do
         {
             size = recv(newSocket, buffer, BUF - 1, 0);
-            if (size > 0)
-            {
+            
+            if (size > 0) {
                 buffer[size] = '\0';
-                mailHandler(buffer, newSocket, directory);
-            }
-            else if (size == 0)
-            {
+                if (loggedIn == 0){
+                    if (ldapHandler(buffer, newSocket) == 0) loggedIn = 1;
+                } else if (loggedIn == 1) {
+                    mailHandler(buffer, newSocket, directory);
+                }
+            } else if (size == 0) {
                 printf("Client closed remote socket\n");
                 break;
-            }
-            else
-            {
+            } else {
                 perror("recv error");
                 return 1;
             }
