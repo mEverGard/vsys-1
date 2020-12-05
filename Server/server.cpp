@@ -24,6 +24,10 @@ extern pthread_mutex_t _mutex;
 std::vector<pthread_t> _threads;
 std::vector<int> _sockets;
 
+void threadHandler(void *args);
+
+struct threadArgs;
+
 int main(int argc, char *argv[])
 {
 
@@ -96,9 +100,7 @@ int main(int argc, char *argv[])
 
     //3 - SERVER WORKING
     addrlen = sizeof(struct sockaddr_in);
-    int size;
-    int loggedIn = 0;
-    std::string username = "";
+
     while (1)
     {
         printf("Waiting for connections...\n");
@@ -106,47 +108,64 @@ int main(int argc, char *argv[])
         if (newSocket > 0)
         {
             _sockets.push_back(newSocket);
-            printf("Incoming COnnection from: %s:%d...\n", inet_ntoa(cliaddress.sin_addr), ntohs(cliaddress.sin_port));
-            strcpy(buffer, "Beep. Welcome to our unsecure Mailserver, please verify yourself.\n");
-            send(newSocket, buffer, strlen(buffer), 0);
-
-            while (true)
-            {
-                size = recv(newSocket, buffer, BUF - 1, 0);
-                std::cout << buffer << std::endl;
-                if (strncmp(buffer, "QUIT", 4) == 0)
-                {
-                    break;
-                }
-                if (size > 0)
-                {
-                    buffer[size] = '\0';
-                    if (loggedIn == 0)
-                    {
-                        if ((username = ldapHandler(buffer, newSocket)) != "0")
-                            loggedIn = 1;
-                    }
-                    else if (loggedIn == 1)
-                    {
-                        mailHandler(buffer, newSocket, directory, username);
-                    }
-                }
-                else if (size == 0)
-                {
-                    printf("Client closed remote socket\n");
-                    break;
-                }
-                else
-                {
-                    perror("recv error");
-                    return 1;
-                }
-            }
         }
-        close(newSocket);
+
+        // start thread
+
+        // add signal handler to end thread
     }
 
     //FINISH CONNECTION
     close(usedSocket);
     return 0;
+}
+
+struct threadArgs
+{
+    struct sockaddr_in cliaddress;
+    int *newSocket;
+    char *buffer;
+};
+void threadHandler(void *args)
+{
+    printf("Incoming Connection from: %s:%d...\n", inet_ntoa(cliaddress.sin_addr), ntohs(cliaddress.sin_port));
+    strcpy(buffer, "Beep. Welcome to our unsecure Mailserver, please verify yourself.\n");
+    send(newSocket, buffer, strlen(buffer), 0);
+
+    int size;
+    int loggedIn = 0;
+    std::string username = "";
+    while (true)
+    {
+        size = recv(newSocket, buffer, BUF - 1, 0);
+        std::cout << buffer << std::endl;
+
+        if (strncmp(buffer, "QUIT", 4) == 0)
+        {
+            break;
+        }
+        if (size > 0)
+        {
+            buffer[size] = '\0';
+            if (loggedIn == 0)
+            {
+                if ((username = ldapHandler(buffer, newSocket)) != "0")
+                    loggedIn = 1;
+            }
+            else if (loggedIn == 1)
+            {
+                mailHandler(buffer, newSocket, directory, username);
+            }
+        }
+        else if (size == 0)
+        {
+            printf("Client closed remote socket\n");
+            break;
+        }
+        else
+        {
+            perror("recv error");
+            return 1;
+        }
+    }
 }
