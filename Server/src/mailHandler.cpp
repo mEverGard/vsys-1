@@ -21,11 +21,14 @@ void defaultMethod(std::vector<std::string> messageParsed)
     std::cout << "METHOD: " << messageParsed[0] << std::endl;
 }
 
-int checkName (std::string fileName, std::string msgnumber){
-    
-    if (fileName != "." && fileName != ".."  && fileName != "index"){
+int checkName(std::string fileName, std::string msgnumber)
+{
+
+    if (fileName != "." && fileName != ".." && fileName != "index")
+    {
         size_t found = fileName.find(msgnumber);
-        if (found != std::string::npos) return 0; //Create a procedure in case +9 emails. For example, number at begin
+        if (found != std::string::npos)
+            return 0; //Create a procedure in case +9 emails. For example, number at begin
     }
     return 1;
 }
@@ -55,7 +58,7 @@ void sendHandler(std::vector<std::string> message, char *dir, int soc, std::stri
     std::string path = dir;
     path += '/' + message[1];
     std::string out = status_code[1];
-    
+
     if (opendir(path.c_str()) == NULL)
     {
         // read/write/search permissions for owner and group, and with read/search permissions for others
@@ -66,13 +69,14 @@ void sendHandler(std::vector<std::string> message, char *dir, int soc, std::stri
         }
     }
     int i = getCount(path);
-    std::string filePath = path + "/" + std::to_string(i) + "_" +   message[3] + ".txt";
+    std::string filePath = path + "/" + std::to_string(i) + "_" + message[2] + ".txt";
     std::ofstream MailFile(filePath);
     MailFile << "SENDER: " << username << std::endl;
     MailFile << "SUBJECT: " << message[2] << std::endl;
     int n = 3;
     MailFile << "CONTENT: ";
-    while (message[n] != "."){
+    while (message[n] != ".")
+    {
         MailFile << message[n] << std::endl;
         n++;
     }
@@ -81,24 +85,30 @@ void sendHandler(std::vector<std::string> message, char *dir, int soc, std::stri
     send(soc, (char *)out.c_str(), strlen((char *)out.c_str()), 0);
 }
 
-void readHandler (std::vector<std::string> message, char *dir, int soc, std::string username){
+void readHandler(std::vector<std::string> message, char *dir, int soc, std::string username)
+{
     //Identify file
     std::string path = dir;
     path += '/' + username;
     DIR *dp;
     std::string out = "";
-    if ((dp = opendir(path.c_str()))){
+    if ((dp = opendir(path.c_str())))
+    {
         struct dirent *ent;
         //get subjects
-        while ((ent = readdir(dp)) != NULL) {
-            if (checkName (ent->d_name, message[1].c_str()) == 0) { //if it is the right file, go in
+        while ((ent = readdir(dp)) != NULL)
+        {
+            if (checkName(ent->d_name, message[1].c_str()) == 0)
+            { //if it is the right file, go in
                 std::ifstream content;
                 content.open(path + '/' + ent->d_name);
-                while (1){
+                while (1)
+                {
                     std::string contentLine;
                     getline(content, contentLine);
                     out = out + contentLine;
-                    if (content.eof()) break;
+                    if (content.eof())
+                        break;
                     out = out + '\n';
                 }
                 getline(content, out);
@@ -106,14 +116,18 @@ void readHandler (std::vector<std::string> message, char *dir, int soc, std::str
             }
         }
         closedir(dp);
-    } else {
+    }
+    else
+    {
         out = "User does not exist\n";
     }
-    if (out == "") out = "No emails with that number\n";
+    if (out == "")
+        out = "No emails with that number\n";
     send(soc, (char *)out.c_str(), strlen((char *)out.c_str()), 0);
 }
 
-void listHandler(std::vector<std::string> message, char *dir, int soc, std::string username) {
+void listHandler(std::vector<std::string> message, char *dir, int soc, std::string username)
+{
     //define path
     std::string path = dir;
     path += '/' + username;
@@ -132,7 +146,7 @@ void listHandler(std::vector<std::string> message, char *dir, int soc, std::stri
             if (temp != "index" && temp != ".." && temp != ".")
             {
                 count++;
-                temp.replace(temp.end()-4,temp.end(), "");
+                temp.replace(temp.end() - 4, temp.end(), "");
                 out += temp + '\n';
             }
         }
@@ -146,18 +160,23 @@ void listHandler(std::vector<std::string> message, char *dir, int soc, std::stri
     send(soc, (char *)out.c_str(), strlen((char *)out.c_str()), 0);
 }
 
-void deleteHandler(std::vector<std::string> message, char *dir, int soc, std::string username){
+void deleteHandler(std::vector<std::string> message, char *dir, int soc, std::string username)
+{
     //Identify file
     std::string path = dir;
     path += '/' + username;
     DIR *dp;
     std::string out = status_code[1];
-    if ((dp = opendir(path.c_str()))){
+    if ((dp = opendir(path.c_str())))
+    {
         struct dirent *ent;
-        while ((ent = readdir(dp)) != NULL) {
-            if (checkName (ent->d_name, message[1].c_str()) == 0) { //if it is the right file, go in
+        while ((ent = readdir(dp)) != NULL)
+        {
+            if (checkName(ent->d_name, message[1].c_str()) == 0)
+            { //if it is the right file, go in
                 std::string fileName = path + "/" + ent->d_name;
-                if (remove(fileName.c_str()) == 0){
+                if (remove(fileName.c_str()) == 0)
+                {
                     out = status_code[0];
                     break;
                 }
@@ -203,4 +222,3 @@ void mailHandler(char *input, int clientSocket, char *directory, std::string use
         send(clientSocket, status_code[2], strlen(status_code[2]), 0);
     }
 }
-

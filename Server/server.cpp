@@ -107,18 +107,27 @@ int main(int argc, char *argv[])
         do
         {
             size = recv(newSocket, buffer, BUF - 1, 0);
-            
-            if (size > 0) {
+
+            if (size > 0)
+            {
                 buffer[size] = '\0';
-                if (loggedIn == 0){
-                    if ((username = ldapHandler(buffer, newSocket)) != "0") loggedIn = 1;
-                } else if (loggedIn == 1) {
+                if (loggedIn == 0)
+                {
+                    if ((username = ldapHandler(buffer, newSocket)) != "0")
+                        loggedIn = 1;
+                }
+                else if (loggedIn == 1)
+                {
                     mailHandler(buffer, newSocket, directory, username);
                 }
-            } else if (size == 0) {
+            }
+            else if (size == 0)
+            {
                 printf("Client closed remote socket\n");
                 break;
-            } else {
+            }
+            else
+            {
                 perror("recv error");
                 return 1;
             }

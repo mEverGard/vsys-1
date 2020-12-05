@@ -1,4 +1,0 @@
-SENDER: test
-SUBJECT: Another message
-CONTENT: This is another message
-Have a look at it (manual input).
