@@ -1,5 +1,4 @@
-Client/client
-Server/server
-Server/emailFolder
+client
+server
+/emailFolder
 .vscode
-/Templates

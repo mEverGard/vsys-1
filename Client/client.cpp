@@ -79,8 +79,7 @@ int main(int argc, char *argv[])
     int size;
 
     //Define socket
-    if ((create_socket = socket(AF_INET, SOCK_STREAM, 0)) == -1)
-    {
+    if ((create_socket = socket(AF_INET, SOCK_STREAM, 0)) == -1){
         perror("Socket error");
         return 1;
     }
@@ -92,62 +91,79 @@ int main(int argc, char *argv[])
     inet_pton(AF_INET, ipAddress, &address.sin_addr); //IP
 
     //Connection
-    if (connect(create_socket, (struct sockaddr *)&address, sizeof(address)) == 0)
-    {
+    if (connect(create_socket, (struct sockaddr *)&address, sizeof(address)) == 0){
         printf("Connection with server (%s) established\n", inet_ntoa(address.sin_addr));
         size = recv(create_socket, buffer, BUF - 1, 0);
-        if (size > 0)
-        {
+        if (size > 0) {
             buffer[size] = '\0';
             printf("%s", buffer);
         }
     }
-    else
-    {
+    else {
         perror("Connect error - no server available");
         return 1;
     }
 
     //Send message
-    do
-    {
-        std::string message;
-        std::string method = getInput("METHOD: ");
-        message.append(method);
-        message.append(getInput("USERNAME: "));
 
-        if (method.compare("SEND\n") == 0)
-        {
-            message.append(getInput("Receiver: "));
-            message.append(getInput("Subject: "));
-            message.append(getInput("Message: ", true));
-        }
-        else if (method.compare("READ\n") == 0 || method.compare("DEL\n") == 0)
-        {
-            message.append(getInput("Message Number: "));
-        }
-        else if (method.compare("LIST\n") == 1 && method.compare("QUIT\n") == 1)
-        {
-            printf("\033[0;31mINVALID METHOD\033[0m\n");
-            continue;
-        }
+        //Login procedure
+        int loggedIn = 0;
+        std::string username = "";
+        do {
+            std::string message = "";
+            std::cout << "Username: ";
+            std::getline(std::cin, username);
+            username = username + '\n';
+            message.append(username);
+            std::string password (getpass("Password: "));
+            message.append(password);
 
-        strcpy(buffer, message.c_str());
-        send(create_socket, buffer, strlen(buffer), 0);
-        size = recv(create_socket, buffer, BUF - 1, 0);
-        if (size > 0)
-        {
-            buffer[size] = '\0';
-            printf("\033[0;32m%s\033[0m\n", buffer);
-        }
-        else if (size == 0)
-        {
-            printf("Server said Bye Bye.");
-            fflush(stdout);
-            close(create_socket);
-            exit(0);
-        }
-    } while (strcmp(buffer, "quit\n") != 0);
+            send(create_socket, message.c_str(), strlen(message.c_str()), 0);
+            size = recv(create_socket, buffer, BUF - 1, 0);
+            if (size > 0) {
+                buffer[size] = '\0';
+                if (strcmp(buffer, "Login succesful.\n") == 0) loggedIn = 1;
+                printf("%s", buffer);
+            }
+        } while (loggedIn == 0);
+
+        do {
+            std::string message;
+            std::string method = getInput("METHOD: ");
+            message.append(method);
+
+            if (method.compare("SEND\n") == 0)
+            {
+                message.append(getInput("Receiver: "));
+                message.append(getInput("Subject: "));
+                message.append(getInput("Message: ", true));
+            }
+            else if (method.compare("READ\n") == 0 || method.compare("DEL\n") == 0)
+            {
+                message.append(getInput("Message Number: "));
+            }
+            else if (method.compare("LIST\n") == 1 && method.compare("QUIT\n") == 1)
+            {
+                printf("\033[0;31mINVALID METHOD\033[0m\n");
+                continue;
+            }
+
+            strcpy(buffer, message.c_str());
+            send(create_socket, buffer, strlen(buffer), 0);
+            size = recv(create_socket, buffer, BUF - 1, 0);
+            if (size > 0)
+            {
+                buffer[size] = '\0';
+                printf("\033[0;32m%s\033[0m\n", buffer);
+            }
+            else if (size == 0)
+            {
+                printf("Server said Bye Bye.");
+                fflush(stdout);
+                close(create_socket);
+                exit(0);
+            }
+        } while (strcmp(buffer, "quit\n") != 0);
     close(create_socket);
 
     return 0;
