@@ -16,6 +16,8 @@
 #include <algorithm>
 #include <cstdio>
 
+pthread_mutex_t _mutex;
+
 void defaultMethod(std::vector<std::string> messageParsed)
 {
     std::cout << "METHOD: " << messageParsed[0] << std::endl;
@@ -203,19 +205,27 @@ void mailHandler(char *input, int clientSocket, char *directory, std::string use
     // TODO: ROUTING HERE
     if (messageParsed[0] == "SEND")
     {
+        pthread_mutex_lock(&_mutex);
         sendHandler(messageParsed, directory, clientSocket, username);
+        pthread_mutex_unlock(&_mutex);
     }
     else if (messageParsed[0] == "LIST")
     {
+        pthread_mutex_lock(&_mutex);
         listHandler(messageParsed, directory, clientSocket, username);
+        pthread_mutex_unlock(&_mutex);
     }
     else if (messageParsed[0] == "READ")
     {
+        pthread_mutex_lock(&_mutex);
         readHandler(messageParsed, directory, clientSocket, username);
+        pthread_mutex_unlock(&_mutex);
     }
     else if (messageParsed[0] == "DEL")
     {
+        pthread_mutex_lock(&_mutex);
         deleteHandler(messageParsed, directory, clientSocket, username);
+        pthread_mutex_unlock(&_mutex);
     }
     else
     {

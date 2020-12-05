@@ -9,4 +9,4 @@
     export LDAPPW=....
 
 3) Compile Server with: 
-    g++ -std=c++11 -Wall -o server server.cpp -lldap -llber
+    g++ -std=c++11 -Wall -o server server.cpp -lldap -llber -lpthread

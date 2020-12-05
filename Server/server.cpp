@@ -23,10 +23,16 @@ extern pthread_mutex_t _mutex;
 // for cleanup:
 std::vector<pthread_t> _threads;
 std::vector<int> _sockets;
+std::vector<struct in_addr> blacklist;
 
-void threadHandler(void *args);
+void *threadHandler(void *args);
 
-struct threadArgs;
+struct threadArgs
+{
+    struct sockaddr_in cliaddress;
+    int *newSocket;
+    char *directory;
+};
 
 int main(int argc, char *argv[])
 {
@@ -34,11 +40,11 @@ int main(int argc, char *argv[])
     //1 - INITALIZATION
 
     //Variables
-    char buffer[BUF];
     socklen_t addrlen;
     int socketPort, usedSocket, newSocket;
     char directory[PATHMAX];
     struct sockaddr_in address, cliaddress;
+    struct threadArgs *varthreadArgs = (struct threadArgs *)malloc(sizeof(struct threadArgs));
 
     //Getopt section
     int c;
@@ -107,12 +113,22 @@ int main(int argc, char *argv[])
         newSocket = accept(usedSocket, (struct sockaddr *)&cliaddress, &addrlen);
         if (newSocket > 0)
         {
+
             _sockets.push_back(newSocket);
+
+            // start thread
+
+            varthreadArgs->cliaddress = cliaddress;
+            varthreadArgs->newSocket = &newSocket;
+            varthreadArgs->directory = directory;
+
+            // https://www.thegeekstuff.com/2012/05/c-mutex-examples/
+            pthread_t id;
+            pthread_mutex_init(&_mutex, NULL);
+
+            pthread_create(&id, NULL, threadHandler, (void *)varthreadArgs);
+            // add signal handler to end thread
         }
-
-        // start thread
-
-        // add signal handler to end thread
     }
 
     //FINISH CONNECTION
@@ -120,14 +136,13 @@ int main(int argc, char *argv[])
     return 0;
 }
 
-struct threadArgs
+void *threadHandler(void *args)
 {
-    struct sockaddr_in cliaddress;
-    int *newSocket;
-    char *buffer;
-};
-void threadHandler(void *args)
-{
+    char buffer[BUF];
+    struct sockaddr_in cliaddress = ((struct threadArgs *)args)->cliaddress;
+    int newSocket = *(((struct threadArgs *)args)->newSocket);
+    char *directory = ((struct threadArgs *)args)->directory;
+    int banCount = 0;
     printf("Incoming Connection from: %s:%d...\n", inet_ntoa(cliaddress.sin_addr), ntohs(cliaddress.sin_port));
     strcpy(buffer, "Beep. Welcome to our unsecure Mailserver, please verify yourself.\n");
     send(newSocket, buffer, strlen(buffer), 0);
@@ -138,7 +153,6 @@ void threadHandler(void *args)
     while (true)
     {
         size = recv(newSocket, buffer, BUF - 1, 0);
-        std::cout << buffer << std::endl;
 
         if (strncmp(buffer, "QUIT", 4) == 0)
         {
@@ -149,8 +163,23 @@ void threadHandler(void *args)
             buffer[size] = '\0';
             if (loggedIn == 0)
             {
+                // TODO: @JORGE do we need mutex here?
+                pthread_mutex_lock(&_mutex);
                 if ((username = ldapHandler(buffer, newSocket)) != "0")
                     loggedIn = 1;
+                if (loggedIn == 0)
+                {
+                    banCount++;
+                    std::cout << banCount << "text\n";
+                    if (banCount > 2)
+                    {
+                        blacklist.push_back(cliaddress.sin_addr);
+                        pthread_mutex_unlock(&_mutex);
+                        // No return as we don't care if the user is banned.
+                        break;
+                    }
+                }
+                pthread_mutex_unlock(&_mutex);
             }
             else if (loggedIn == 1)
             {
@@ -165,7 +194,9 @@ void threadHandler(void *args)
         else
         {
             perror("recv error");
-            return 1;
+            break;
         }
     }
+    close(newSocket);
+    return NULL;
 }
