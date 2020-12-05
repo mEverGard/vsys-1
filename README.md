@@ -5,8 +5,8 @@
     Ubuntu Paket (probably not): ldap-utils
 
 2) Create enviroment variable
-    sudo -H gedit /etc/environment
-    ldapuser = if19b111
-    ldappw = *******
+    export LDAPUSER=if19b...
+    export LDAPPW=....
 
-3) Compile with: g++ -std=c++11 -Wall -o server server.cpp -lldap -llber
+3) Compile Server with: 
+    g++ -std=c++11 -Wall -o server server.cpp -lldap -llber

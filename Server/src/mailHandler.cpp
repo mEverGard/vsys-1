@@ -219,6 +219,6 @@ void mailHandler(char *input, int clientSocket, char *directory, std::string use
     }
     else
     {
-        send(clientSocket, status_code[2], strlen(status_code[2]), 0);
+        send(clientSocket, status_code[1], strlen(status_code[1]), 0);
     }
 }

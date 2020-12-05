@@ -19,6 +19,11 @@
 #include "src/mailHandler.cpp"
 #include "src/myldap.cpp"
 
+extern pthread_mutex_t _mutex;
+// for cleanup:
+std::vector<pthread_t> _threads;
+std::vector<int> _sockets;
+
 int main(int argc, char *argv[])
 {
 
@@ -100,39 +105,44 @@ int main(int argc, char *argv[])
         newSocket = accept(usedSocket, (struct sockaddr *)&cliaddress, &addrlen);
         if (newSocket > 0)
         {
-            printf("Client connected from %s:%d...\n", inet_ntoa(cliaddress.sin_addr), ntohs(cliaddress.sin_port));
-            strcpy(buffer, "Welcome to myserver, Please enter your login data.\n");
+            _sockets.push_back(newSocket);
+            printf("Incoming COnnection from: %s:%d...\n", inet_ntoa(cliaddress.sin_addr), ntohs(cliaddress.sin_port));
+            strcpy(buffer, "Beep. Welcome to our unsecure Mailserver, please verify yourself.\n");
             send(newSocket, buffer, strlen(buffer), 0);
+
+            while (true)
+            {
+                size = recv(newSocket, buffer, BUF - 1, 0);
+                std::cout << buffer << std::endl;
+                if (strncmp(buffer, "QUIT", 4) == 0)
+                {
+                    break;
+                }
+                if (size > 0)
+                {
+                    buffer[size] = '\0';
+                    if (loggedIn == 0)
+                    {
+                        if ((username = ldapHandler(buffer, newSocket)) != "0")
+                            loggedIn = 1;
+                    }
+                    else if (loggedIn == 1)
+                    {
+                        mailHandler(buffer, newSocket, directory, username);
+                    }
+                }
+                else if (size == 0)
+                {
+                    printf("Client closed remote socket\n");
+                    break;
+                }
+                else
+                {
+                    perror("recv error");
+                    return 1;
+                }
+            }
         }
-        do
-        {
-            size = recv(newSocket, buffer, BUF - 1, 0);
-
-            if (size > 0)
-            {
-                buffer[size] = '\0';
-                if (loggedIn == 0)
-                {
-                    if ((username = ldapHandler(buffer, newSocket)) != "0")
-                        loggedIn = 1;
-                }
-                else if (loggedIn == 1)
-                {
-                    mailHandler(buffer, newSocket, directory, username);
-                }
-            }
-            else if (size == 0)
-            {
-                printf("Client closed remote socket\n");
-                break;
-            }
-            else
-            {
-                perror("recv error");
-                return 1;
-            }
-
-        } while (strncmp(buffer, "quit", 4) != 0);
         close(newSocket);
     }
 
