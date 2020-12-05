@@ -93,7 +93,7 @@ int main(int argc, char *argv[])
     addrlen = sizeof(struct sockaddr_in);
     int size;
     int loggedIn = 0;
-
+    std::string username = "";
     while (1)
     {
         printf("Waiting for connections...\n");
@@ -111,9 +111,9 @@ int main(int argc, char *argv[])
             if (size > 0) {
                 buffer[size] = '\0';
                 if (loggedIn == 0){
-                    if (ldapHandler(buffer, newSocket) == 0) loggedIn = 1;
+                    if ((username = ldapHandler(buffer, newSocket)) != "0") loggedIn = 1;
                 } else if (loggedIn == 1) {
-                    mailHandler(buffer, newSocket, directory);
+                    mailHandler(buffer, newSocket, directory, username);
                 }
             } else if (size == 0) {
                 printf("Client closed remote socket\n");

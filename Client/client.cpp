@@ -131,7 +131,6 @@ int main(int argc, char *argv[])
             std::string message;
             std::string method = getInput("METHOD: ");
             message.append(method);
-            message.append(username);
 
             if (method.compare("SEND\n") == 0)
             {

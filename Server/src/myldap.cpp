@@ -102,10 +102,10 @@ int ldapCheck(const char* username, const char* password, std::string search) {
 
 }
 
-int ldapHandler(char *input, int clientSocket){
+std::string ldapHandler(char *input, int clientSocket){
 
    char buffer[BUF];
-   int code = 1;
+   std::string code = "0";
    std::vector<std::string> messageParsed;
    std::string parsed;
    std::string temp(input);
@@ -113,14 +113,15 @@ int ldapHandler(char *input, int clientSocket){
    while (std::getline(strm, parsed)) {
       messageParsed.push_back(parsed);
    }
+   std::string username = messageParsed[0];
    
-   if (ldapCheck(getenv("ldapuser"), getenv("ldappw"), messageParsed[0]) == 0){
-      int result = ldapCheck(messageParsed[0].c_str(), messageParsed[1].c_str(), messageParsed[0].c_str());
+   if (ldapCheck(getenv("ldapuser"), getenv("ldappw"), username) == 0){
+      int result = ldapCheck(username.c_str(), messageParsed[1].c_str(), username);
       
       if (result == 0) {
          std::cout << "User logged in succesfully" << std::endl;
          strcpy(buffer, "Login succesful.\n");
-         code = 0;
+         code = username;
       } else if (result == 2) {
          strcpy(buffer, "Wrong credentials.\n");
       } else {
