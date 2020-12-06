@@ -133,7 +133,6 @@ int main(int argc, char *argv[])
 
                 if (cliaddress.sin_addr.s_addr == it.base()->address.s_addr)
                 {
-                    // TODO: TIME does not work yet => check
                     std::cout << std::time(0) << " " << it.base()->end << std::endl;
                     if (std::time(0) < it.base()->end)
                     {
@@ -167,7 +166,6 @@ int main(int argc, char *argv[])
             pthread_mutex_init(&_mutex, NULL);
 
             pthread_create(&id, NULL, threadHandler, (void *)varthreadArgs);
-            // add signal handler to end thread
         }
     }
 
@@ -215,7 +213,7 @@ void *threadHandler(void *args)
                         blacklist.push_back(ban);
                         pthread_mutex_unlock(&_mutex);
                         std::cout << "User got banned.\n";
-                        // No return as we don't care if the user is banned.
+                        // No return as we don't care if the user got banned.
                         break;
                     }
                 }
