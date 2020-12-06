@@ -2,7 +2,7 @@
 //CONSTANTS
 #define PATHMAX 255
 #define BUF 1024
-
+#define BANSECONDS 3600
 //IMPORTS
 #include <stdio.h>
 #include <unistd.h>
@@ -16,14 +16,23 @@
 #include <arpa/inet.h>
 #include <errno.h>
 #include <sys/stat.h>
+#include <ctime>
+#include <csignal>
 #include "src/mailHandler.cpp"
 #include "src/myldap.cpp"
 
 extern pthread_mutex_t _mutex;
 // for cleanup:
+
+struct banned
+{
+    struct in_addr address;
+    std::time_t end;
+};
+
 std::vector<pthread_t> _threads;
 std::vector<int> _sockets;
-std::vector<struct in_addr> blacklist;
+std::vector<struct banned> blacklist;
 
 void *threadHandler(void *args);
 
@@ -34,20 +43,22 @@ struct threadArgs
     char *directory;
 };
 
+int usedSocket;
+void sigHandler(int sig);
+
 int main(int argc, char *argv[])
 {
 
     //1 - INITALIZATION
-
+    (void)signal(SIGINT, sigHandler);
     //Variables
     socklen_t addrlen;
-    int socketPort, usedSocket, newSocket;
+    int socketPort, newSocket, isBanned, c;
     char directory[PATHMAX];
     struct sockaddr_in address, cliaddress;
     struct threadArgs *varthreadArgs = (struct threadArgs *)malloc(sizeof(struct threadArgs));
-
+    char buffer[BUF];
     //Getopt section
-    int c;
     if (argc != 5)
     {
         printf("Usage: %s -p port -d directory\n", argv[0]);
@@ -111,11 +122,39 @@ int main(int argc, char *argv[])
     {
         printf("Waiting for connections...\n");
         newSocket = accept(usedSocket, (struct sockaddr *)&cliaddress, &addrlen);
+        isBanned = 0;
         if (newSocket > 0)
         {
-
             _sockets.push_back(newSocket);
 
+            std::vector<struct banned>::const_iterator it;
+            for (it = blacklist.begin(); it != blacklist.end(); it++)
+            {
+
+                if (cliaddress.sin_addr.s_addr == it.base()->address.s_addr)
+                {
+                    // TODO: TIME does not work yet => check
+                    std::cout << it.base()->end << " " << std::time(0) << std::endl;
+                    // if (std::time(0) >= it.base()->end)
+                    // {
+                    std::cout << "User is banned.\n";
+                    isBanned = 1;
+                    break;
+                    // }
+                    // else
+                    // {
+                    //     blacklist.erase(it);
+                    //     break;
+                    // }
+                }
+            }
+            if (isBanned == 1)
+            {
+                strcpy(buffer, "You are banned.\n");
+                send(newSocket, buffer, strlen(buffer), 0);
+                close(newSocket);
+                continue;
+            }
             // start thread
 
             varthreadArgs->cliaddress = cliaddress;
@@ -170,10 +209,10 @@ void *threadHandler(void *args)
                 if (loggedIn == 0)
                 {
                     banCount++;
-                    std::cout << banCount << "text\n";
                     if (banCount > 2)
                     {
-                        blacklist.push_back(cliaddress.sin_addr);
+                        struct banned ban = {cliaddress.sin_addr, (std::time(0) + BANSECONDS)};
+                        blacklist.push_back(ban);
                         pthread_mutex_unlock(&_mutex);
                         // No return as we don't care if the user is banned.
                         break;
@@ -198,5 +237,32 @@ void *threadHandler(void *args)
         }
     }
     close(newSocket);
+
+    pthread_mutex_destroy(&_mutex);
+    pthread_exit(NULL);
     return NULL;
+}
+
+void sigHandler(int sig)
+{
+    if (_threads.size() > 0)
+    {
+        for (auto &vec : _threads)
+        {
+            pthread_cancel(vec);
+        }
+    }
+    if (_sockets.size() > 0)
+    {
+        for (auto &client : _sockets)
+        {
+            if (client > 0)
+            {
+                close(client);
+            }
+        }
+    }
+    close(usedSocket);
+    pthread_exit(NULL);
+    exit(sig);
 }
