@@ -134,18 +134,19 @@ int main(int argc, char *argv[])
                 if (cliaddress.sin_addr.s_addr == it.base()->address.s_addr)
                 {
                     // TODO: TIME does not work yet => check
-                    std::cout << it.base()->end << " " << std::time(0) << std::endl;
-                    // if (std::time(0) >= it.base()->end)
-                    // {
-                    std::cout << "User is banned.\n";
-                    isBanned = 1;
-                    break;
-                    // }
-                    // else
-                    // {
-                    //     blacklist.erase(it);
-                    //     break;
-                    // }
+                    std::cout << std::time(0) << " " << it.base()->end << std::endl;
+                    if (std::time(0) < it.base()->end)
+                    {
+                        std::cout << "User is banned.\n";
+                        isBanned = 1;
+                        break;
+                    }
+                    else
+                    {
+                        std::cout << "User is unbanned.\n";
+                        blacklist.erase(it);
+                        break;
+                    }
                 }
             }
             if (isBanned == 1)
@@ -202,7 +203,6 @@ void *threadHandler(void *args)
             buffer[size] = '\0';
             if (loggedIn == 0)
             {
-                // TODO: @JORGE do we need mutex here?
                 pthread_mutex_lock(&_mutex);
                 if ((username = ldapHandler(buffer, newSocket)) != "0")
                     loggedIn = 1;
@@ -214,6 +214,7 @@ void *threadHandler(void *args)
                         struct banned ban = {cliaddress.sin_addr, (std::time(0) + BANSECONDS)};
                         blacklist.push_back(ban);
                         pthread_mutex_unlock(&_mutex);
+                        std::cout << "User got banned.\n";
                         // No return as we don't care if the user is banned.
                         break;
                     }
