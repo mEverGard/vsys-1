@@ -2,7 +2,7 @@
 //CONSTANTS
 #define PATHMAX 255
 #define BUF 1024
-
+#define BANSECONDS 3600
 //IMPORTS
 #include <stdio.h>
 #include <unistd.h>
@@ -16,23 +16,49 @@
 #include <arpa/inet.h>
 #include <errno.h>
 #include <sys/stat.h>
+#include <ctime>
+#include <csignal>
 #include "src/mailHandler.cpp"
 #include "src/myldap.cpp"
+
+extern pthread_mutex_t _mutex;
+// for cleanup:
+
+struct banned
+{
+    struct in_addr address;
+    std::time_t end;
+};
+
+std::vector<pthread_t> _threads;
+std::vector<int> _sockets;
+std::vector<struct banned> blacklist;
+
+void *threadHandler(void *args);
+
+struct threadArgs
+{
+    struct sockaddr_in cliaddress;
+    int *newSocket;
+    char *directory;
+};
+
+int usedSocket;
+void sigHandler(int sig);
 
 int main(int argc, char *argv[])
 {
 
     //1 - INITALIZATION
-
+    (void)signal(SIGINT, sigHandler);
     //Variables
-    char buffer[BUF];
     socklen_t addrlen;
-    int socketPort, usedSocket, newSocket;
+    int socketPort, newSocket, isBanned, c;
     char directory[PATHMAX];
     struct sockaddr_in address, cliaddress;
-
+    struct threadArgs *varthreadArgs = (struct threadArgs *)malloc(sizeof(struct threadArgs));
+    char buffer[BUF];
     //Getopt section
-    int c;
     if (argc != 5)
     {
         printf("Usage: %s -p port -d directory\n", argv[0]);
@@ -91,43 +117,152 @@ int main(int argc, char *argv[])
 
     //3 - SERVER WORKING
     addrlen = sizeof(struct sockaddr_in);
-    int size;
-    int loggedIn = 0;
-    std::string username = "";
+
     while (1)
     {
         printf("Waiting for connections...\n");
         newSocket = accept(usedSocket, (struct sockaddr *)&cliaddress, &addrlen);
+        isBanned = 0;
         if (newSocket > 0)
         {
-            printf("Client connected from %s:%d...\n", inet_ntoa(cliaddress.sin_addr), ntohs(cliaddress.sin_port));
-            strcpy(buffer, "Welcome to myserver, Please enter your login data.\n");
-            send(newSocket, buffer, strlen(buffer), 0);
-        }
-        do
-        {
-            size = recv(newSocket, buffer, BUF - 1, 0);
-            
-            if (size > 0) {
-                buffer[size] = '\0';
-                if (loggedIn == 0){
-                    if ((username = ldapHandler(buffer, newSocket)) != "0") loggedIn = 1;
-                } else if (loggedIn == 1) {
-                    mailHandler(buffer, newSocket, directory, username);
-                }
-            } else if (size == 0) {
-                printf("Client closed remote socket\n");
-                break;
-            } else {
-                perror("recv error");
-                return 1;
-            }
+            _sockets.push_back(newSocket);
 
-        } while (strncmp(buffer, "quit", 4) != 0);
-        close(newSocket);
+            std::vector<struct banned>::const_iterator it;
+            for (it = blacklist.begin(); it != blacklist.end(); it++)
+            {
+
+                if (cliaddress.sin_addr.s_addr == it.base()->address.s_addr)
+                {
+                    std::cout << std::time(0) << " " << it.base()->end << std::endl;
+                    if (std::time(0) < it.base()->end)
+                    {
+                        std::cout << "User is banned.\n";
+                        isBanned = 1;
+                        break;
+                    }
+                    else
+                    {
+                        std::cout << "User is unbanned.\n";
+                        blacklist.erase(it);
+                        break;
+                    }
+                }
+            }
+            if (isBanned == 1)
+            {
+                strcpy(buffer, "You are banned.\n");
+                send(newSocket, buffer, strlen(buffer), 0);
+                close(newSocket);
+                continue;
+            }
+            // start thread
+
+            varthreadArgs->cliaddress = cliaddress;
+            varthreadArgs->newSocket = &newSocket;
+            varthreadArgs->directory = directory;
+
+            // https://www.thegeekstuff.com/2012/05/c-mutex-examples/
+            pthread_t id;
+            pthread_mutex_init(&_mutex, NULL);
+
+            pthread_create(&id, NULL, threadHandler, (void *)varthreadArgs);
+        }
     }
 
     //FINISH CONNECTION
     close(usedSocket);
+    free(varthreadArgs);
     return 0;
+}
+
+void *threadHandler(void *args)
+{
+    char buffer[BUF];
+    struct sockaddr_in cliaddress = ((struct threadArgs *)args)->cliaddress;
+    int newSocket = *(((struct threadArgs *)args)->newSocket);
+    char *directory = ((struct threadArgs *)args)->directory;
+    int banCount = 0;
+    printf("Incoming Connection from: %s:%d...\n", inet_ntoa(cliaddress.sin_addr), ntohs(cliaddress.sin_port));
+    strcpy(buffer, "Beep. Welcome to our unsecure Mailserver, please verify yourself.\n");
+    send(newSocket, buffer, strlen(buffer), 0);
+
+    int size;
+    int loggedIn = 0;
+    std::string username = "";
+    while (true)
+    {
+        size = recv(newSocket, buffer, BUF - 1, 0);
+
+        if (strncmp(buffer, "QUIT", 4) == 0)
+        {
+            break;
+        }
+        if (size > 0)
+        {
+            buffer[size] = '\0';
+            if (loggedIn == 0)
+            {
+                pthread_mutex_lock(&_mutex);
+                if ((username = ldapHandler(buffer, newSocket)) != "0")
+                    loggedIn = 1;
+                if (loggedIn == 0)
+                {
+                    banCount++;
+                    if (banCount > 2)
+                    {
+                        struct banned ban = {cliaddress.sin_addr, (std::time(0) + BANSECONDS)};
+                        blacklist.push_back(ban);
+                        pthread_mutex_unlock(&_mutex);
+                        std::cout << "User got banned.\n";
+                        // No return as we don't care if the user got banned.
+                        break;
+                    }
+                }
+                pthread_mutex_unlock(&_mutex);
+            }
+            else if (loggedIn == 1)
+            {
+                mailHandler(buffer, newSocket, directory, username);
+            }
+        }
+        else if (size == 0)
+        {
+            printf("Client closed remote socket\n");
+            break;
+        }
+        else
+        {
+            perror("recv error");
+            break;
+        }
+    }
+    close(newSocket);
+
+    pthread_mutex_destroy(&_mutex);
+    pthread_exit(NULL);
+    return NULL;
+}
+
+void sigHandler(int sig)
+{
+    if (_threads.size() > 0)
+    {
+        for (auto &vec : _threads)
+        {
+            pthread_cancel(vec);
+        }
+    }
+    if (_sockets.size() > 0)
+    {
+        for (auto &client : _sockets)
+        {
+            if (client > 0)
+            {
+                close(client);
+            }
+        }
+    }
+    close(usedSocket);
+    pthread_exit(NULL);
+    exit(sig);
 }

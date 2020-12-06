@@ -1,3 +1,0 @@
-SENDER: if19b103
-SUBJECT: This is a test message
-CONTENT: Hello there
