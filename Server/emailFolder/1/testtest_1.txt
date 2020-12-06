@@ -1,3 +1,0 @@
-SENDER: test
-SUBJECT: testtest
-CONTENT: Jorjerje

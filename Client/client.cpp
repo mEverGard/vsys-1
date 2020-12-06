@@ -132,9 +132,25 @@ int main(int argc, char *argv[])
             std::string method = getInput("METHOD: ");
             message.append(method);
 
+            //SEND Instruction
             if (method.compare("SEND\n") == 0)
             {
-                message.append(getInput("Receiver: "));
+                int usercount = 1;
+                
+                //Receivers input
+                std::string addusers = getInput("Additional receivers (y/n): ");
+                message.append(addusers);
+                if (addusers == "y\n"){
+                    std::string userinput = "";
+                    while (userinput != ".\n") {
+                        userinput = getInput("Receiver " + std::to_string(usercount) + ": ");
+                        usercount++;
+                        message.append(userinput);
+                    }
+                } else {
+                    message.append(getInput("Receiver: "));
+                }
+                //Message
                 message.append(getInput("Subject: "));
                 message.append(getInput("Message: ", true));
             }

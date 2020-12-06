@@ -1,4 +1,0 @@
-SENDER: test
-SUBJECT: another welcome
-CONTENT: wow
-wowo
