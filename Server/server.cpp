@@ -171,6 +171,7 @@ int main(int argc, char *argv[])
 
     //FINISH CONNECTION
     close(usedSocket);
+    free(varthreadArgs);
     return 0;
 }
 
