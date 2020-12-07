@@ -236,8 +236,9 @@ void *threadHandler(void *args)
             break;
         }
     }
-    close(newSocket);
 
+    close(newSocket);
+    close(usedSocket);
     pthread_mutex_destroy(&_mutex);
     pthread_exit(NULL);
     return NULL;

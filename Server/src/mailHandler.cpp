@@ -18,11 +18,6 @@
 
 pthread_mutex_t _mutex;
 
-void defaultMethod(std::vector<std::string> messageParsed)
-{
-    std::cout << "METHOD: " << messageParsed[0] << std::endl;
-}
-
 int checkName(std::string fileName, std::string msgnumber)
 {
 
@@ -185,7 +180,10 @@ void deleteHandler(std::vector<std::string> message, char *dir, int soc, std::st
     std::string path = dir;
     path += '/' + username;
     DIR *dp;
-    std::string out = status_code[1];
+
+    // Returns Bad Request if file not found
+    std::string out = status_code[3];
+
     if ((dp = opendir(path.c_str())))
     {
         struct dirent *ent;
@@ -208,8 +206,6 @@ void deleteHandler(std::vector<std::string> message, char *dir, int soc, std::st
 
 void mailHandler(char *input, int clientSocket, char *directory, std::string username)
 {
-    // printf("Message received: %s", input);
-
     std::vector<std::string> messageParsed;
     std::string parsed;
     std::string temp(input);
@@ -219,7 +215,6 @@ void mailHandler(char *input, int clientSocket, char *directory, std::string use
         messageParsed.push_back(parsed);
     }
 
-    // TODO: ROUTING HERE
     if (messageParsed[0] == "SEND")
     {
         pthread_mutex_lock(&_mutex);
