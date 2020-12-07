@@ -50,7 +50,7 @@ int main(int argc, char *argv[])
 {
 
     //1 - INITALIZATION
-    (void)signal(SIGINT, sigHandler);
+
     //Variables
     socklen_t addrlen;
     int socketPort, newSocket, isBanned, c;
@@ -117,7 +117,7 @@ int main(int argc, char *argv[])
 
     //3 - SERVER WORKING
     addrlen = sizeof(struct sockaddr_in);
-
+    signal(SIGINT, sigHandler);
     while (1)
     {
         printf("Waiting for connections...\n");
@@ -245,6 +245,7 @@ void *threadHandler(void *args)
 
 void sigHandler(int sig)
 {
+    std::cout << "Goodbye\n";
     if (_threads.size() > 0)
     {
         for (auto &vec : _threads)

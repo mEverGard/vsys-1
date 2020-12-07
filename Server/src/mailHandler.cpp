@@ -35,6 +35,16 @@ int checkName(std::string fileName, std::string msgnumber)
     return 1;
 }
 
+bool checkLength(std::string str, int max)
+{
+    int size = (int)str.size();
+    if (size > max || size < 1)
+    {
+        return true;
+    }
+    return false;
+}
+
 int getCount(std::string path)
 {
     int i = 1;
@@ -73,6 +83,13 @@ void sendHandler(std::vector<std::string> message, char *dir, int soc, std::stri
     int i = getCount(path);
     std::string filePath = path + "/" + std::to_string(i) + "_" + message[2] + ".txt";
     std::ofstream MailFile(filePath);
+
+    if (!checkLength(username, 8) || !checkLength(message[2], 80))
+    {
+        send(soc, status_code[3], strlen(status_code[3]), 0);
+        return;
+    }
+
     MailFile << "SENDER: " << username << std::endl;
     MailFile << "SUBJECT: " << message[2] << std::endl;
     int n = 3;
