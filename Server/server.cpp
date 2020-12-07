@@ -48,7 +48,11 @@ void sigHandler(int sig);
 
 int main(int argc, char *argv[])
 {
-
+    if (!getenv("LDAPUSER") || !getenv("LDAPPW"))
+    {
+        std::cout << "LDAPUSER or LDAPPW Env missing\n";
+        return 0;
+    }
     //1 - INITALIZATION
 
     //Variables

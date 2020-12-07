@@ -121,6 +121,7 @@ std::string ldapHandler(char *input, int clientSocket)
       messageParsed.push_back(parsed);
    }
    std::string username = messageParsed[0];
+
    if (ldapCheck(getenv("LDAPUSER"), getenv("LDAPPW"), username) == 0)
    {
       int result = ldapCheck(username.c_str(), messageParsed[1].c_str(), username);
