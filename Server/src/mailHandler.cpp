@@ -70,7 +70,7 @@ int saveEmail(std::string username, std::vector<std::string> message, int subjec
     if (!checkLength(receiver, 8) || !checkLength(message[2], 80))
     {
         send(soc, status_code[3], strlen(status_code[3]), 0);
-        return;
+        return 0;
     }
 
     path += '/' + receiver;
