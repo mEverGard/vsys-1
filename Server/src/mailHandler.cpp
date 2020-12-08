@@ -35,9 +35,9 @@ bool checkLength(std::string str, int max)
     int size = (int)str.size();
     if (size > max || size < 1)
     {
-        return true;
+        return false;
     }
-    return false;
+    return true;
 }
 
 int getIndex(std::string path)
@@ -67,12 +67,7 @@ int saveEmail(std::string username, std::vector<std::string> message, int subjec
     //define where it is saved
     std::string path = dir;
 
-    if (!checkLength(receiver, 8) || !checkLength(message[2], 80))
-    {
-        send(soc, status_code[3], strlen(status_code[3]), 0);
-        return 0;
-    }
-
+    std::cout << receiver << std::endl;
     path += '/' + receiver;
 
 inFolder:
@@ -173,15 +168,28 @@ void sendHandler(std::vector<std::string> message, char *dir, int soc, std::stri
     }
     else
     { //case input != (y/n)
-        send(soc, (char *)status_code[1], strlen((char *)status_code[1]), 0);
+        send(soc, (char *)status_code[1], strlen((char *)status_code[3]), 0);
+        return;
+    }
+    if (!checkLength(message[subjectRow], 80))
+    {
+        std::cout << message[subjectRow] << "\n";
+        send(soc, status_code[3], strlen(status_code[3]), 0);
         return;
     }
     //Main email
+
     if ((mainRow = saveEmail(username, message, subjectRow, "Pool", dir, soc, 0, false)) == -1)
         out = status_code[1];
     //Save references
     for (int i = 1; i < count + 1; i++)
     {
+        if (!checkLength(message[i + 1], 8))
+        {
+            std::cout << message[i + 1] << " 1here\n";
+            send(soc, status_code[3], strlen(status_code[3]), 0);
+            continue;
+        }
         if (saveEmail("Pool", message, subjectRow, message[i + 1], dir, soc, mainRow, false) == -1)
             out = status_code[1];
     }

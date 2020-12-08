@@ -138,6 +138,7 @@ int main(int argc, char *argv[])
         std::getline(std::cin, username);
         username = username + '\n';
         message.append(username);
+        std::cout << "Password: ";
         std::string password(get_pass());
         message.append(password);
 
