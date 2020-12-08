@@ -3,4 +3,5 @@
 char status_code[][50] = {
     {"200 HTTP OK\n"},
     {"404 NOT FOUND\n"},
-    {"500 Internal Server Error\n"}};
+    {"500 Internal Server Error\n"},
+    {"400 Bad Request"}};
