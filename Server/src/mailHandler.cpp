@@ -67,7 +67,6 @@ int saveEmail(std::string username, std::vector<std::string> message, int subjec
     //define where it is saved
     std::string path = dir;
 
-    std::cout << receiver << std::endl;
     path += '/' + receiver;
 
 inFolder:
@@ -173,7 +172,6 @@ void sendHandler(std::vector<std::string> message, char *dir, int soc, std::stri
     }
     if (!checkLength(message[subjectRow], 80))
     {
-        std::cout << message[subjectRow] << "\n";
         send(soc, status_code[3], strlen(status_code[3]), 0);
         return;
     }
@@ -186,7 +184,6 @@ void sendHandler(std::vector<std::string> message, char *dir, int soc, std::stri
     {
         if (!checkLength(message[i + 1], 8))
         {
-            std::cout << message[i + 1] << " 1here\n";
             send(soc, status_code[3], strlen(status_code[3]), 0);
             continue;
         }
@@ -266,7 +263,7 @@ void listHandler(std::vector<std::string> message, char *dir, int soc, std::stri
         while ((ent = readdir(dp)) != NULL)
         {
             std::string temp = ent->d_name;
-            if (temp != "index" && temp != ".." && temp != ".")
+            if (temp != "index" && temp != ".." && temp != "." && temp != "sent")
             {
                 count++;
                 temp.replace(temp.end() - 4, temp.end(), "");

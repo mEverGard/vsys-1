@@ -3,6 +3,7 @@
 #define PATHMAX 255
 #define BUF 1024
 #define BANSECONDS 3600
+
 //IMPORTS
 #include <stdio.h>
 #include <unistd.h>
