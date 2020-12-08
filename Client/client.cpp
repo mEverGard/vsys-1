@@ -17,6 +17,18 @@
 #include <iostream>
 #include <termios.h>
 #include <stdio.h>
+#include "src/encryption.cpp"
+
+std::string enterKey(){
+    std::string key = "";
+    while (key.length() != 4){
+        if (key.length() > 0) std::cout << "Key must have 4 digits" << std::endl;
+        std::cout << "Please enter the key: ";
+        getline(std::cin, key);
+        if (key == "0") break;
+    }
+    return key;
+}
 
 std::string get_pass()
 {
@@ -182,8 +194,17 @@ int main(int argc, char *argv[])
                 message.append(getInput("Receiver: "));
             }
             //Message
+            std::string encryption;
             message.append(getInput("Subject: "));
-            message.append(getInput("Message: ", true));
+            std::cout << "Encryption? (y/n): ";
+            getline(std::cin,encryption);
+            if (encryption == "y"){
+                std::string key = enterKey();
+                message.append(encryptEmail(getInput("Message: ", true),key));
+            } else {
+                if (encryption != "n") std::cout << "Input not recognised, email will not be encrypted";
+                message.append(getInput("Message: ", true));
+            }
         }
         else if (method.compare("READ\n") == 0 || method.compare("DEL\n") == 0)
         {
@@ -200,12 +221,20 @@ int main(int argc, char *argv[])
         size = recv(create_socket, buffer, BUF - 1, 0);
         if (size > 0)
         {
+            if (method == "READ\n"){
+                std::string key = enterKey();
+                std::string message(buffer);
+                int conPos = message.find("CONTENT: ");
+                std::string content = decryptEmail(message.substr(conPos+ 9, std::string::npos), key);
+                message.replace(conPos + 9, std::string::npos, content);
+                strcpy(buffer, message.c_str());
+            }
             buffer[size] = '\0';
             printf("\033[0;32m%s\033[0m\n", buffer);
         }
         else if (size == 0)
         {
-            printf("Server said Bye Bye.");
+            printf("Server said Bye Bye.\n");
             fflush(stdout);
             close(create_socket);
             exit(0);
