@@ -14,8 +14,9 @@ long moduloCalculator (long value, long modulo);
 
 
 int calculateKeyValue(std::string key){
+    
     int keyValue = 0;
-
+    
     for (int i = 0; i < 5; i++){
         keyValue += int(key[i]);
     }
