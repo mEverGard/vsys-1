@@ -202,7 +202,7 @@ int main(int argc, char *argv[])
                 std::string key = enterKey();
                 message.append(encryptEmail(getInput("Message: ", true),key));
             } else {
-                if (encryption != "n") std::cout << "Input not recognised, email will not be encrypted";
+                if (encryption != "n") std::cout << "Input not recognised, email will not be encrypted\n";
                 message.append(getInput("Message: ", true));
             }
         }
